@@ -18,21 +18,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	annotationConfig   = "$config"
-	annotationManifest = "$manifest"
-)
-
 type pushOptions struct {
-	targetRef              string
-	fileRefs               []string
-	manifestConfigRef      string
-	manifestAnnotations    string
-	pathValidationDisabled bool
-	verbose                bool
+	targetRef string
+	fileRefs  []string
+
+	verbose bool
 
 	debug    bool
-	configs  []string
 	username string
 	password string
 }
@@ -44,8 +36,8 @@ func pushCmd() *cobra.Command {
 		Short: "Push files to remote registry",
 		Long: `Push files to remote registry
 
-Example - Push file "hi.txt" with the "application/vnd.oci.image.layer.v1.tar" media type (default):
-  oras push localhost:5000/hello:latest ./docs/
+Example - Push directory called docs with markdown and other content.
+  dim push localhost:5000/hello:latest ./docs/
 `,
 		Args: cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -55,12 +47,8 @@ Example - Push file "hi.txt" with the "application/vnd.oci.image.layer.v1.tar" m
 		},
 	}
 
-	// cmd.Flags().StringVarP(&opts.manifestConfigRef, "manifest-config", "", "", "manifest config file")
-	// cmd.Flags().StringVarP(&opts.manifestAnnotations, "manifest-annotations", "", "", "manifest annotation file")
-	// cmd.Flags().BoolVarP(&opts.pathValidationDisabled, "disable-path-validation", "", false, "skip path validation")
 	cmd.Flags().BoolVarP(&opts.verbose, "verbose", "v", false, "verbose output")
 	cmd.Flags().BoolVarP(&opts.debug, "debug", "d", false, "debug mode")
-	// cmd.Flags().StringArrayVarP(&opts.configs, "config", "c", nil, "auth config path")
 	cmd.Flags().StringVarP(&opts.username, "username", "u", "", "registry username")
 	cmd.Flags().StringVarP(&opts.password, "password", "p", "", "registry password")
 	return cmd
@@ -81,36 +69,14 @@ func runPush(opts pushOptions) error {
 		pushOpts    []oras.PushOpt
 	)
 	defer store.Close()
-	// if opts.manifestAnnotations != "" {
-	// 	if err := decodeJSON(opts.manifestAnnotations, &annotations); err != nil {
-	// 		return err
-	// 	}
-	// 	if value, ok := annotations[annotationConfig]; ok {
-	// 		pushOpts = append(pushOpts, oras.WithConfigAnnotations(value))
-	// 	}
-	// 	if value, ok := annotations[annotationManifest]; ok {
-	// 		pushOpts = append(pushOpts, oras.WithManifestAnnotations(value))
-	// 	}
-	// }
-	// if opts.manifestConfigRef != "" {
-	// 	filename, mediaType := parseFileRef(opts.manifestConfigRef, ocispec.MediaTypeImageConfig)
-	// 	file, err := store.Add(annotationConfig, mediaType, filename)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	file.Annotations = nil
-	// 	pushOpts = append(pushOpts, oras.WithConfig(file))
-	// }
-	// if opts.pathValidationDisabled {
-	// 	pushOpts = append(pushOpts, oras.WithNameValidation(nil))
-	// }
+
 	files, err := loadFiles(store, annotations, &opts)
 	if err != nil {
 		return err
 	}
 
 	// ready to push
-	resolver := newResolver(opts.username, opts.password, opts.configs...)
+	resolver := newResolver(opts.username, opts.password)
 	pushOpts = append(pushOpts, oras.WithPushBaseHandler(pushStatusTrack()))
 	desc, err := oras.Push(ctx, resolver, opts.targetRef, store, files, pushOpts...)
 	if err != nil {
@@ -122,15 +88,6 @@ func runPush(opts pushOptions) error {
 
 	return nil
 }
-
-// func decodeJSON(filename string, v interface{}) error {
-// 	file, err := os.Open(filename)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer file.Close()
-// 	return json.NewDecoder(file).Decode(v)
-// }
 
 func loadFiles(store *content.FileStore, annotations map[string]map[string]string, opts *pushOptions) ([]ocispec.Descriptor, error) {
 	var files []ocispec.Descriptor
