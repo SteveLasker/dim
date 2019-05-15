@@ -11,7 +11,7 @@ func main() {
 		Use:          "dim [command]",
 		SilenceUsage: true,
 	}
-	cmd.AddCommand(loginCmd())
+	cmd.AddCommand(loginCmd(), pullCmd())
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
