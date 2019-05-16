@@ -29,6 +29,10 @@ type pushOptions struct {
 	password string
 }
 
+const (
+	ManifestConfigMediaType = "application/vnd.stevelasker.docsinmarkdown.config.v1+json"
+)
+
 func pushCmd() *cobra.Command {
 	var opts pushOptions
 	cmd := &cobra.Command{
@@ -69,6 +73,9 @@ func runPush(opts pushOptions) error {
 		pushOpts    []oras.PushOpt
 	)
 	defer store.Close()
+
+	//Set the config MediaType
+	pushOpts = append(pushOpts, oras.WithConfigMediaType(ManifestConfigMediaType))
 
 	files, err := loadFiles(store, annotations, &opts)
 	if err != nil {
