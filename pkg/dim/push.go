@@ -27,7 +27,7 @@ func LoadDirectory(store *content.FileStore, dir string) ([]ocispec.Descriptor, 
 		var mediaType string
 
 		if strings.ToLower(filepath.Ext(filename)) == ".md" {
-			mediaType = "vnd/application.document.markdown"
+			mediaType = "vnd/application.stevelasker.docsinmarkdown.layer.v1+md"
 		}
 
 		fmt.Printf("Adding -> %s\n", filename)

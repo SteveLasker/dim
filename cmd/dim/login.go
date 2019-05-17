@@ -34,19 +34,19 @@ func loginCmd() *cobra.Command {
 		Long: `Log in to a remote registry
 
 Example - Login with username and password from command line:
-  oras login -u username -p password localhost:5000
+  dim login -u username -p password localhost:5000
 
 Example - Login with username and password from stdin:
-  oras login -u username --password-stdin localhost:5000
+  dim login -u username --password-stdin localhost:5000
 
 Example - Login with identity token from command line:
-  oras login -p token localhost:5000
+  dim login -p token localhost:5000
 
 Example - Login with identity token from stdin:
-  oras login --password-stdin localhost:5000
+  dim login --password-stdin localhost:5000
 
 Example - Login with username and password by prompt:
-  oras login localhost:5000
+  dim login localhost:5000
 `,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
